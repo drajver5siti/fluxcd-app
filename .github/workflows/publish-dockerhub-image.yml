@@ -5,7 +5,7 @@ on:
         branches: ['main']
 
 jobs:
-    build-and-push:
+    build-push-and-notify:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
@@ -26,4 +26,13 @@ jobs:
                 context: .
                 file: ./Dockerfile
                 push: true
-                tags: ${{ secrets.DOCKERHUB_USERNAME}}/fluxcd-app:${{ env.APP_VERSION }}
+                tags: ${{ secrets.DOCKERHUB_USERNAME }}/fluxcd-app:${{ env.APP_VERSION }}
+
+            - name: Notify helm repo for tag update
+              uses: benc-uk/workflow-dispatch@v1
+              with:
+                workflow: notify-app-version-update
+                repo: ${{ secrets.DOCKERHUB_USERNAME }}/fluxcd-helm
+                inputs: '{ "version": "${{ env.APP_VERSION }}" }'
+                token: ${{ secrets.NOTIFY_APP_VERSION_UPDATE_TOKEN }}
+
